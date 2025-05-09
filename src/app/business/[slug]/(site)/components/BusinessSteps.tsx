@@ -48,12 +48,15 @@ export function BusinessSteps({ steps, slug }: ClientBookingStepsProps) {
 	const handleSelectService = (service: BusinessService) => {
 		setSelectedService(service)
 		setSelectedDate(null)
+		setSelectedTime(null)
+		setSelectedProfessional(null)
 		setCurrentStep('data')
 	}
 
 	const handleSelectDate = async (date: string) => {
 		setSelectedDate(date)
 		if (!selectedService) return
+		setSelectedProfessional(null)
 		setLoading(true)
 
 		try {
@@ -71,6 +74,7 @@ export function BusinessSteps({ steps, slug }: ClientBookingStepsProps) {
 	const handleSelectTime = async (time: string) => {
 		if (!selectedService || !selectedDate) return
 		setSelectedTime(time)
+		setSelectedProfessional(null)
 		setLoading(true)
 
 		try {
@@ -103,19 +107,28 @@ export function BusinessSteps({ steps, slug }: ClientBookingStepsProps) {
 			<h2 className='text-xl font-semibold text-gray-700 mb-4 text-center'>Agendamento</h2>
 
 			<div className='flex gap-3 overflow-x-auto justify-center mb-6'>
-				{steps.map((step) => (
-					<div
-						key={step.key}
-						title={step.title}
-						onClick={() => setCurrentStep(step.key)}
-						className={`w-36 h-16 flex flex-col items-center justify-center text-center text-base font-medium rounded-lg cursor-pointer border transition
-              ${currentStep === step.key ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}`}
-					>
-						<div>{step.label}</div>
-						{step.key === 'servico' && selectedService && <div className='text-xs font-normal'>{selectedService.name}</div>}
-						{step.key === 'data' && selectedDate && <div className='text-xs font-normal'>{formatDayMonth(selectedDate)}</div>}
-					</div>
-				))}
+				{steps.map((step) => {
+					const isEnabled = step.key === 'servico' || (step.key === 'data' && selectedService) || (step.key === 'profissional' && selectedService && selectedDate && selectedTime) || (step.key === 'finalizar' && selectedService && selectedDate && selectedTime && selectedProfessional)
+
+					return (
+						<div
+							key={step.key}
+							title={step.title}
+							onClick={() => {
+								if (isEnabled) {
+									setCurrentStep(step.key)
+								}
+							}}
+							className={`w-36 h-16 flex flex-col items-center justify-center text-center text-base font-medium rounded-lg transition border
+          ${currentStep === step.key ? 'bg-blue-600 text-white border-blue-600 shadow' : isEnabled ? 'bg-gray-100 text-gray-700 border-gray-300 cursor-pointer hover:bg-gray-200' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}`}
+						>
+							<div>{step.label}</div>
+							{step.key === 'servico' && selectedService && <div className='text-xs font-normal'>{selectedService.name}</div>}
+							{step.key === 'data' && selectedDate && <div className='text-xs font-normal'>{formatDayMonth(selectedDate)}</div>}
+							{step.key === 'profissional' && selectedProfessional && <div className='text-xs font-normal'>{selectedProfessional.name}</div>}
+						</div>
+					)
+				})}
 			</div>
 
 			<div className='bg-white rounded-lg p-6 shadow-md border border-gray-200'>
