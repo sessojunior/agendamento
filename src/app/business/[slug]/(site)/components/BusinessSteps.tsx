@@ -56,6 +56,7 @@ export function BusinessSteps({ steps, slug }: ClientBookingStepsProps) {
 	const handleSelectDate = async (date: string) => {
 		setSelectedDate(date)
 		if (!selectedService) return
+		setSelectedTime(null)
 		setSelectedProfessional(null)
 		setLoading(true)
 
@@ -124,7 +125,12 @@ export function BusinessSteps({ steps, slug }: ClientBookingStepsProps) {
 						>
 							<div>{step.label}</div>
 							{step.key === 'servico' && selectedService && <div className='text-xs font-normal'>{selectedService.name}</div>}
-							{step.key === 'data' && selectedDate && <div className='text-xs font-normal'>{formatDayMonth(selectedDate)}</div>}
+							{step.key === 'data' && selectedDate && (
+								<div className='text-xs font-normal'>
+									{formatDayMonth(selectedDate)}
+									{selectedTime ? ` - ${selectedTime}` : ''}
+								</div>
+							)}
 							{step.key === 'profissional' && selectedProfessional && <div className='text-xs font-normal'>{selectedProfessional.name}</div>}
 						</div>
 					)
