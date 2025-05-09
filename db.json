@@ -1,0 +1,408 @@
+{
+  "saas": {
+    "title": "Sistema de agendamento",
+    "description": "Sistema de agendamento para aprendizado. Acesse a barbearia de exemplo para fazer um agendamento."
+  },
+  "saas_admin": [
+    {
+      "id": "1",
+      "email": "admin@saas.com",
+      "password": "admin123",
+      "roles": [
+        "admin"
+      ]
+    }
+  ],
+  "customer_user": [
+    {
+      "id": "1",
+      "name": "Rodrigo",
+      "email": "rodrigo@example.com",
+      "password": "123456"
+    },
+    {
+      "id": "2",
+      "name": "Mateus",
+      "email": "mateus@example.com",
+      "password": "123456"
+    },
+    {
+      "id": "3",
+      "name": "João",
+      "email": "joao@example.com",
+      "password": "123456"
+    }
+  ],
+  "business": [
+    {
+      "id": "1",
+      "name": "Barbearia de exemplo",
+      "slug": "minha-barbearia",
+      "description": "A melhor barbearia da cidade. Aqui você pode agendar seu horário de forma rápida e prática. Escolha o profissional, selecione o serviço desejado, escolha a data e hora que preferir e pronto!"
+    },
+    {
+      "id": "2",
+      "name": "Outra barbearia de exemplo",
+      "slug": "outra-barbearia",
+      "description": "A segunda melhor barbearia da cidade. Aqui você pode agendar seu horário de forma rápida e prática. Escolha o profissional, selecione o serviço desejado, escolha a data e hora que preferir e pronto!"
+    }
+  ],
+  "business_admin": [
+    {
+      "id": "1",
+      "business_id": "1",
+      "name": "Rafael",
+      "email": "dono@example.com",
+      "password": "123456",
+      "role": "admin"
+    }
+  ],
+  "business_customer": [
+    {
+      "id": "1",
+      "business_id": "1",
+      "customer_user_id": "1"
+    }
+  ],
+  "business_service": [
+    {
+      "id": "1",
+      "business_id": "1",
+      "order": "1",
+      "name": "Corte de cabelo",
+      "description": "Corte de cabelo masculino.",
+      "status": "active"
+    },
+    {
+      "id": "2",
+      "business_id": "1",
+      "order": "3",
+      "name": "Barba",
+      "description": "Barba masculina.",
+      "status": "active"
+    },
+    {
+      "id": "3",
+      "business_id": "1",
+      "order": "2",
+      "name": "Chapinha",
+      "description": "Chapinha masculina.",
+      "status": "active"
+    },
+    {
+      "id": "4",
+      "business_id": "1",
+      "order": "4",
+      "name": "Escova",
+      "description": "Escova masculina.",
+      "status": "active"
+    },
+    {
+      "id": "5",
+      "business_id": "2",
+      "order": "2",
+      "name": "Chapinha",
+      "description": "Chapinha masculina.",
+      "status": "active"
+    },
+    {
+      "id": "6",
+      "business_id": "2",
+      "order": "4",
+      "name": "Escova",
+      "description": "Escova masculina.",
+      "status": "active"
+    }
+  ],
+  "business_employee": [
+    {
+      "id": "1",
+      "order": "1",
+      "business_id": "1",
+      "name": "Carlos Almeida",
+      "avatar": "https://via.placeholder.com/50",
+      "business_services": [
+        {
+          "business_service_id": "1",
+          "duration": 30
+        },
+        {
+          "business_service_id": "3",
+          "duration": 20
+        },
+        {
+          "business_service_id": "4",
+          "duration": 40
+        }
+      ],
+      "work_time": {
+        "start": "10:00",
+        "end": "18:00"
+      },
+      "blocked_times": [
+        {
+          "time": "10:15",
+          "duration": 15,
+          "description": "Reunião interna"
+        },
+        {
+          "time": "13:15",
+          "duration": 75,
+          "description": "Almoço"
+        },
+        {
+          "time": "15:00",
+          "duration": 45,
+          "description": "Descanso"
+        }
+      ],
+      "unavailable_dates": [
+        {
+          "date_start": "2025-05-12",
+          "date_end": "2025-05-17",
+          "reason": "Férias"
+        },
+        {
+          "date_start": "2025-05-19",
+          "date_end": "2025-05-25",
+          "reason": "Viagem de trabalho"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "order": "2",
+      "business_id": "2",
+      "name": "Ana Maria",
+      "avatar": "https://via.placeholder.com/50",
+      "business_services": [
+        {
+          "business_service_id": "2",
+          "duration": 30
+        },
+        {
+          "business_service_id": "4",
+          "duration": 40
+        }
+      ],
+      "work_time": {
+        "start": "09:00",
+        "end": "18:00"
+      },
+      "blocked_times": [
+        {
+          "time": "12:00",
+          "duration": 30,
+          "description": "Reunião de equipe"
+        },
+        {
+          "time": "12:30",
+          "duration": 195,
+          "description": "Almoço"
+        },
+        {
+          "time": "16:00",
+          "duration": 75,
+          "description": "Lanche"
+        }
+      ],
+      "unavailable_dates": [
+        {
+          "date_start": "2025-05-14",
+          "date_end": "2025-05-14",
+          "reason": "Férias"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "order": "3",
+      "business_id": "1",
+      "name": "Fernanda Silva",
+      "avatar": "https://via.placeholder.com/50",
+      "business_services": [
+        {
+          "business_service_id": "1",
+          "duration": 30
+        }
+      ],
+      "work_time": {
+        "start": "08:30",
+        "end": "17:00"
+      },
+      "blocked_times": [
+        {
+          "time": "11:30",
+          "duration": 90,
+          "description": "Almoço"
+        }
+      ],
+      "unavailable_dates": [
+        {
+          "date_start": "2025-05-13",
+          "date_end": "2025-05-13",
+          "reason": "Viagem pessoal"
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "order": "4",
+      "business_id": "2",
+      "name": "Juliano Pereira",
+      "avatar": "https://via.placeholder.com/50",
+      "business_services": [
+        {
+          "business_service_id": "2",
+          "duration": 30
+        },
+        {
+          "business_service_id": "4",
+          "duration": 40
+        }
+      ],
+      "work_time": {
+        "start": "08:00",
+        "end": "19:00"
+      },
+      "blocked_times": [],
+      "unavailable_dates": []
+    },
+    {
+      "id": "5",
+      "order": "5",
+      "business_id": "2",
+      "name": "Luana Souza",
+      "avatar": "https://via.placeholder.com/50",
+      "business_services": [
+        {
+          "business_service_id": "1",
+          "duration": 30
+        },
+        {
+          "business_service_id": "2",
+          "duration": 30
+        }
+      ],
+      "work_time": {
+        "start": "10:00",
+        "end": "18:00"
+      },
+      "blocked_times": [
+        {
+          "time": "14:15",
+          "duration": 135,
+          "description": "Atendimento"
+        }
+      ],
+      "unavailable_dates": [
+        {
+          "date_start": "2025-05-16",
+          "date_end": "2025-05-16",
+          "reason": "Férias"
+        }
+      ]
+    }
+  ],
+  "business_appointment": [
+    {
+      "id": "1",
+      "business_id": "1",
+      "business_employee_id": "1",
+      "business_service_id": "1",
+      "customer_user_id": "1",
+      "date": "2025-05-12",
+      "time": "11:15",
+      "duration": 90,
+      "status": "pending"
+    },
+    {
+      "id": "2",
+      "business_id": "1",
+      "business_employee_id": "2",
+      "business_service_id": "1",
+      "customer_user_id": "2",
+      "date": "2025-05-12",
+      "time": "09:30",
+      "duration": 15,
+      "status": "confirmed"
+    },
+    {
+      "id": "3",
+      "business_id": "1",
+      "business_employee_id": "2",
+      "business_service_id": "2",
+      "customer_user_id": "1",
+      "date": "2025-05-10",
+      "time": "13:00",
+      "duration": 75,
+      "status": "canceled"
+    },
+    {
+      "id": "4",
+      "business_id": "1",
+      "business_employee_id": "4",
+      "business_service_id": "4",
+      "customer_user_id": "2",
+      "date": "2025-05-10",
+      "time": "09:45",
+      "duration": 30,
+      "status": "canceled"
+    },
+    {
+      "id": "5",
+      "business_id": "1",
+      "business_employee_id": "5",
+      "business_service_id": "3",
+      "customer_user_id": "3",
+      "date": "2025-05-10",
+      "time": "10:15",
+      "duration": 90,
+      "status": "confirmed"
+    },
+    {
+      "id": "6",
+      "business_id": "1",
+      "business_employee_id": "1",
+      "business_service_id": "2",
+      "customer_user_id": "1",
+      "date": "2025-05-13",
+      "time": "16:30",
+      "duration": 75,
+      "status": "confirmed"
+    },
+    {
+      "id": "7",
+      "business_id": "1",
+      "business_employee_id": "1",
+      "business_service_id": "2",
+      "customer_user_id": "1",
+      "date": "2025-05-11",
+      "time": "16:30",
+      "duration": 75,
+      "status": "confirmed"
+    },
+    {
+      "id": "8",
+      "business_id": "1",
+      "business_employee_id": "1",
+      "business_service_id": "2",
+      "customer_user_id": "1",
+      "date": "2025-05-12",
+      "time": "16:30",
+      "duration": 75,
+      "status": "confirmed"
+    },
+    {
+      "id": "9",
+      "business_id": "2",
+      "business_employee_id": "2",
+      "business_service_id": "5",
+      "customer_user_id": "2",
+      "date": "2025-05-13",
+      "time": "09:15",
+      "duration": 45,
+      "status": "confirmed"
+    }
+  ]
+}
