@@ -75,3 +75,7 @@ appointment                     → Agendamentos com todas as informações rele
 
 4. Seleciona um profissional que esteja disponível e atenda os requisitos anteriores
 5. Finaliza o agendamento
+
+### Melhorias futuras:
+
+1. Colocar um 'extraWorkTime' que seria um tempo extra de trabalho em determinados dias. Deveria ser adaptado isso no JSON. Serve para suprir a necessidade de quando o profissional puder trabalhar em horário diferente do que ele costuma trabalhar e está funcionando.

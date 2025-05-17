@@ -63,25 +63,28 @@ export default function Appointments({ slug }: { slug: string }) {
 			</div>
 
 			{/* Corpo */}
-			<div className='flex flex-row w-full'>
-				{/* Horários */}
-				<div className='flex flex-col w-16 border-r-2 border-zinc-200 -mt-0.5'>
-					{/* A duração dos agendamentos deve respeitar em ser sempre de 15 em 15 minutos */}
-					{times.map((time) => {
-						const minutes = time.split(':')[1] // Pega a parte dos minutos
-						return <Times key={time} time={time} showTime={minutes === '00' || minutes === '30'} />
-					})}
-				</div>
+			<div className='size-full overflow-y-auto h-[calc(100vh-240px)]'>
+				<div className='flex flex-row w-full'>
+					{/* Horários */}
+					<div className='flex flex-col w-16 border-r-2 border-zinc-200 -mt-0.5'>
+						{/* A duração dos agendamentos deve respeitar em ser sempre de 15 em 15 minutos */}
+						{times.map((time) => {
+							const minutes = time.split(':')[1] // Pega a parte dos minutos
+							return <Times key={time} time={time} showTime={minutes === '00' || minutes === '30'} />
+						})}
+					</div>
 
-				{/* Agendamentos dos profissionais */}
-				<div className='flex flex-row'>
-					{events.map((employee) => (
-						<div key={employee.employee_id} className='flex flex-col w-60 border-r border-zinc-100'>
-							{employee.events.map((event, index) => (
-								<Event key={index} time={event.time} type={event.type} duration={event.duration} description={event.description} name={event.name} service={event.service} />
+					{/* Agendamentos dos profissionais */}
+					<div className='flex flex-row'>
+						{events.length > 0 &&
+							events.map((employee) => (
+								<div key={employee.employee_id} className='flex flex-col w-60 border-r border-zinc-100'>
+									{employee.events.map((event, index) => (
+										<Event key={index} time={event.time} type={event.type} duration={event.duration} description={event.description} name={event.name} service={event.service} />
+									))}
+								</div>
 							))}
-						</div>
-					))}
+					</div>
 				</div>
 			</div>
 		</div>

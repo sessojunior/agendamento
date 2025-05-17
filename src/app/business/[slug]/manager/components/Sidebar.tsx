@@ -7,6 +7,9 @@ export default function Sidebar() {
 				<li>Item 2</li>
 				<li>Item 3</li>
 			</ul>
+			<p className='mt-4'>
+				<span className='font-bold'>Melhoria futura:</span> colocar um 'extraWorkTime' que seria um tempo extra de trabalho em determinados dias. Deveria ser adaptado isso no JSON. Serve para suprir a necessidade de quando o profissional puder trabalhar em horário diferente do que ele costuma trabalhar e está funcionando.
+			</p>
 		</div>
 	)
 }
