@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getBusinessServices, generateDates, generateTimeSlots, getAvailableEmployees } from '@/utils/business'
-import type { BusinessService } from '@/utils/business'
+import { getBusinessServices, generateDates, generateTimes, getAvailableEmployees } from '@/utils/business'
+import type { ServiceType } from '@/utils/business'
 import type { Step } from '../page'
 
 interface ClientBookingStepsProps {
@@ -13,9 +13,9 @@ interface ClientBookingStepsProps {
 export function BusinessSteps({ steps, slug }: ClientBookingStepsProps) {
 	const [currentStep, setCurrentStep] = useState<Step>('servico')
 	const [loading, setLoading] = useState<boolean>(true)
-	const [services, setServices] = useState<BusinessService[]>([])
+	const [services, setServices] = useState<ServiceType[]>([])
 
-	const [selectedService, setSelectedService] = useState<BusinessService | null>(null)
+	const [selectedService, setSelectedService] = useState<ServiceType | null>(null)
 	const [selectedDate, setSelectedDate] = useState<string | null>(null)
 	const [selectedTime, setSelectedTime] = useState<string | null>(null)
 	const [selectedProfessional, setSelectedProfessional] = useState<{ id: string; name: string } | null>(null)
@@ -45,7 +45,7 @@ export function BusinessSteps({ steps, slug }: ClientBookingStepsProps) {
 		}
 	}, [selectedService])
 
-	const handleSelectService = (service: BusinessService) => {
+	const handleSelectService = (service: ServiceType) => {
 		setSelectedService(service)
 		setSelectedDate(null)
 		setSelectedTime(null)
@@ -61,7 +61,7 @@ export function BusinessSteps({ steps, slug }: ClientBookingStepsProps) {
 		setLoading(true)
 
 		try {
-			const slots = await generateTimeSlots({ slug, serviceId: selectedService.id, date })
+			const slots = await generateTimes({ slug, serviceId: selectedService.id, date })
 			setAvailableTimeSlots(slots)
 			console.log(slots)
 		} catch (error) {

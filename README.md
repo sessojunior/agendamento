@@ -50,14 +50,14 @@ json-server --watch db.json --port 4000
 ```
 Recurso:                        Descrição:
 saas                            → Informações do sistema
-saas_admin                      → Admins do sistema SaaS
-customer_user                   → Usuários finais (clientes de empresas)
+admin                           → Admins do sistema SaaS
+customer                        → Usuários finais (clientes de empresas)
 business                        → Empresas/barbearias
-business_admin                  → Donos ou gestores da empresa
+manager                         → Donos ou gestores da empresa
 business_customer               → Relação empresa-cliente (vínculo entre empresa e cliente)
-business_service                → Serviços oferecidos por cada empresa, com ordenação
-business_employee               → Funcionários por empresa, serviços prestados, horários de trabalho e períodos bloqueados
-business_appointment            → Agendamentos com todas as informações relevantes, incluindo status e serviços solicitados
+service                         → Serviços oferecidos por cada empresa, com ordenação
+employee                        → Funcionários por empresa, serviços prestados, horários de trabalho e períodos bloqueados
+appointment                     → Agendamentos com todas as informações relevantes, incluindo status e serviços solicitados
 ```
 
 ### Fluxo de agendamento

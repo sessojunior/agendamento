@@ -1,13 +1,13 @@
 import { API_URL } from '@/utils/env'
 
-export type Business = {
+export type BusinessType = {
 	id: string
 	name: string
 	slug: string
 	description: string
 }
 
-export type BusinessService = {
+export type ServiceType = {
 	id: string
 	business_id: string
 	order: string
@@ -16,50 +16,46 @@ export type BusinessService = {
 	status: 'active' | 'inactive'
 }
 
-export type BusinessEmployee = {
+export type EmployeeType = {
 	id: string
 	business_id: string
 	name: string
 	avatar: string
-	business_services: { business_service_id: string; duration: number }[]
+	status: 'active' | 'inactive'
+	services: { service_id: string; duration: number }[]
 	work_time: { start: string; end: string }
 	blocked_times: { time: string; duration: string; description: string }[]
 	unavailable_dates: { date_start: string; date_end: string; reason: string }[]
 }
 
-export type BusinessEmployeeAppointment = {
+export type AppointmentType = {
 	id: string
 	business_id: string
-	business_employee_id: string
-	business_service_id: string
-	customer_user_id: string
+	employee_id: string
+	service_id: string
+	customer_id: string
 	date: string
 	time: string
 	duration: number
 	status: 'pending' | 'confirmed' | 'canceled'
 }
 
-export type DateStatus = {
-	date: string
-	formattedDate: string
-	status: 'available' | 'unavailable'
-	reason: string | null
+type EventEmployeeType = {
+	time: string
+	type: 'not_work_time' | 'unavailable_date' | 'blocked_time' | 'appointment_time' | 'free_time' | 'empty'
+	duration?: number
+	description?: string
+	name?: string
+	service?: string
 }
 
-export type TimeSlot = {
-	date: string // formato "YYYY-MM-DD"
-	serviceDuration: number // minutos
-	professional: {
-		id: string
-		work_time: { start: string; end: string }
-		blocked_times: { time: string; duration: number; description: string }[]
-		unavailable_dates: { date_start: string; date_end: string; reason: string }[]
-		appointments: { date: string; time: string; duration: number }[]
-	}
+export type AllEventsEmployeeType = {
+	employee_id: string
+	events: EventEmployeeType[]
 }
 
-// Obtém os dados da empresa pelo slug
-export async function getBusiness(slug: string): Promise<Business | null> {
+// Obtém os dados da empresa pelo slug da empresa
+export async function getBusiness(slug: string): Promise<BusinessType | null> {
 	try {
 		const res = await fetch(`${API_URL}/business?slug=${slug}`, {
 			method: 'GET',
@@ -83,39 +79,41 @@ export async function getBusiness(slug: string): Promise<Business | null> {
 	}
 }
 
-// Busca profissionais da empresa pelo slug que fazem o serviço desejado
-export async function getEmployeesService(slug: string, service_id: string): Promise<BusinessEmployee[]> {
+// Busca profissionais ativos da empresa que oferecem o serviço desejado
+export async function getEmployeesService(slug: string, service_id: string): Promise<EmployeeType[]> {
 	try {
 		const business = await getBusiness(slug)
 		if (!business?.id) return []
 
-		const res = await fetch(`${API_URL}/business_employee?business_id=${business.id}&order=order&_order=asc`, {
+		const res = await fetch(`${API_URL}/employee?business_id=${business.id}&order=order&_order=asc`, {
 			method: 'GET',
 			headers: { 'Content-Type': 'application/json' },
 			cache: 'no-store',
 		})
 		if (!res.ok) throw new Error(`Erro ao buscar profissionais: ${res.status}`)
 
-		const allEmployees: BusinessEmployee[] = await res.json()
+		const allEmployees: EmployeeType[] = await res.json()
 
-		// Filtra os profissionais que oferecem o serviço
-		const filtered = allEmployees.filter((employee) => employee.business_services.some((s) => s.business_service_id === service_id))
+		// Filtra profissionais que:
+		// 1. Estão ativos (status === 'active')
+		// 2. Oferecem o serviço com o ID informado
+		const filtered = allEmployees.filter((employee) => employee.status === 'active' && employee.services.some((s) => s.service_id === service_id))
 
 		return filtered
 	} catch (error) {
-		console.error('Erro em getEmployeesByService:', error)
+		console.error('Erro em getEmployeesService:', error)
 		return []
 	}
 }
 
-// Busca serviços da empresa pelo slug e que estejam com o status ativo
-export async function getBusinessServices(slug: string): Promise<BusinessService[]> {
+// Busca serviços da empresa pelo slug da empresa e que estejam com o status ativo
+export async function getBusinessServices(slug: string): Promise<ServiceType[]> {
 	try {
 		const business = await getBusiness(slug)
 		if (!business?.id) return []
 
 		// Busca serviços com status "active" e business_id correspondente
-		const res = await fetch(`${API_URL}/business_service?business_id=${business.id}&status=active&_sort=order&_order=asc`, {
+		const res = await fetch(`${API_URL}/service?business_id=${business.id}&status=active&_sort=order&_order=asc`, {
 			method: 'GET',
 			headers: { 'Content-Type': 'application/json' },
 			cache: 'no-store',
@@ -128,20 +126,20 @@ export async function getBusinessServices(slug: string): Promise<BusinessService
 		const data = await res.json()
 		return data
 	} catch (error) {
-		console.error('Erro em getBusinessServices:', error)
+		console.error('Erro em getServices:', error)
 		return []
 	}
 }
 
-// Busca agendamentos do profissional da empresa pelo slug, profissional, data inicial e final
-export async function getBusinessEmployeeAppointments(slug: string, employee_id: string, startDate: string, endDate: string): Promise<BusinessEmployeeAppointment[]> {
+// Busca agendamentos do profissional da empresa pelo slug da empresa, profissional, data inicial e final
+export async function getEmployeeAppointments(slug: string, employee_id: string, startDate: string, endDate: string): Promise<AppointmentType[]> {
 	try {
 		// Busca a empresa pelo slug
 		const business = await getBusiness(slug)
 		if (!business?.id) return []
 
 		// Monta a URL com todos os filtros necessários
-		const url = `${API_URL}/business_appointment` + `?business_id=${business.id}` + `&business_employee_id=${employee_id}` + `&date_gte=${startDate}` + `&date_lte=${endDate}`
+		const url = `${API_URL}/appointment` + `?business_id=${business.id}` + `&employee_id=${employee_id}` + `&date_gte=${startDate}` + `&date_lte=${endDate}`
 
 		// Faz a requisição
 		const res = await fetch(url, {
@@ -157,14 +155,14 @@ export async function getBusinessEmployeeAppointments(slug: string, employee_id:
 		// Converte e valida o resultado
 		const data = await res.json()
 		if (!Array.isArray(data)) {
-			console.warn('Resposta inesperada de business_appointment:', data)
+			console.warn('Resposta inesperada de appointment:', data)
 			return []
 		}
 
 		// Retorna o array tipado
-		return data as BusinessEmployeeAppointment[]
+		return data as AppointmentType[]
 	} catch (error) {
-		console.error('Erro em getBusinessEmployeeAppointments:', error)
+		console.error('Erro em getEmployeeAppointments:', error)
 		return []
 	}
 }
@@ -212,13 +210,13 @@ export function generateDates(startDate: string | Date, days: number): { date: s
 }
 
 // Gera um array de horários disponíveis considerando:
-// - O tempo de funcionamento do profissional (work_time)
+// - O tempo de funcionamento do profissional ativo (work_time)
 // - A duração do serviço selecionado (duration)
 // - Os horário bloqueados (blocked_times). Exemplo: reuniões.
 // - As datas indisponíveis, onde não há nenhum horário (unavailable_dates). Exemplo: férias, folgas.
 // - Os agendamentos (appointments) já existentes, já agendados com o profissional e que não estão com o status 'canceled'
 // - Se ao menos um profissional puder atender no horário, o horário fica disponível
-export async function generateTimeSlots({ slug, serviceId, date }: { slug: string; serviceId: string; date: string }): Promise<
+export async function generateTimes({ slug, serviceId, date }: { slug: string; serviceId: string; date: string }): Promise<
 	{
 		time: string
 		available: boolean
@@ -254,23 +252,26 @@ export async function generateTimeSlots({ slug, serviceId, date }: { slug: strin
 	if (!businessId) return []
 
 	// Buscar funcionários e agendamentos
-	const [employeesRes, appointmentsRes] = await Promise.all([fetch(`${API_URL}/business_employee?business_id=${businessId}`), fetch(`${API_URL}/business_appointment?business_id=${businessId}`)])
-	const employees: BusinessEmployee[] = await employeesRes.json()
-	const appointments: BusinessEmployeeAppointment[] = await appointmentsRes.json()
+	const [employeesRes, appointmentsRes] = await Promise.all([fetch(`${API_URL}/employee?business_id=${businessId}`), fetch(`${API_URL}/appointment?business_id=${businessId}`)])
 
-	// Filtrar profissionais que prestam o serviço
-	const professionals = employees
+	const employees: EmployeeType[] = await employeesRes.json()
+	const appointments: AppointmentType[] = await appointmentsRes.json()
+
+	// Filtra apenas os profissionais com status "active"
+	const activeEmployees = employees.filter((emp) => emp.status === 'active')
+
+	// Filtra apenas os profissionais ativos que prestam o serviço
+	const professionals = activeEmployees
 		.map((emp) => {
-			const match = emp.business_services.find((s) => String(s.business_service_id) === String(serviceId))
+			const match = emp.services.find((s) => String(s.service_id) === String(serviceId))
 			if (!match) return null
 			return {
 				...emp,
 				serviceDuration: Number(match.duration),
 			}
 		})
-		.filter(Boolean) as (BusinessEmployee & { serviceDuration: number })[]
+		.filter(Boolean) as (EmployeeType & { serviceDuration: number })[]
 
-	// Map para controlar os horários e os profissionais disponíveis
 	const timeSlotMap: Map<
 		string,
 		{
@@ -280,7 +281,7 @@ export async function generateTimeSlots({ slug, serviceId, date }: { slug: strin
 		}
 	> = new Map()
 
-	// LOG de todos os profissionais
+	// Log de todos os profissionais
 	console.log('Profissionais:', professionals)
 
 	for (const pro of professionals) {
@@ -292,7 +293,7 @@ export async function generateTimeSlots({ slug, serviceId, date }: { slug: strin
 		const workEnd = toMinutes(pro.work_time.end)
 		const duration = pro.serviceDuration
 
-		// LOG de horário de trabalho do profissional
+		// Log de horário de trabalho do profissional
 		console.log(`Profissional ${pro.name} trabalha das ${toTimeString(workStart)} até ${toTimeString(workEnd)} com duração do serviço de ${duration} minutos`)
 
 		// Verificar bloqueios de horário (blocked_times)
@@ -310,14 +311,14 @@ export async function generateTimeSlots({ slug, serviceId, date }: { slug: strin
 			}
 		}
 
-		// LOG de bloqueios
+		// Log de bloqueios
 		console.log(`Profissional ${pro.name} tem bloqueios de horário:`)
 		blockedRanges.forEach((bt) => console.log(`- De ${toTimeString(bt.start)} até ${toTimeString(bt.end)} por: ${bt.description}`))
 
 		// Verificar agendamentos para a data e profissional
-		const appointmentsForDate = appointments.filter((appt) => appt.business_employee_id === pro.id && appt.date === date && appt.status !== 'canceled')
+		const appointmentsForDate = appointments.filter((appt) => appt.employee_id === pro.id && appt.date === date && appt.status !== 'canceled')
 
-		// LOG de agendamentos
+		// Log de agendamentos
 		if (appointmentsForDate.length > 0) {
 			console.log(`Profissional ${pro.name} tem os seguintes agendamentos:`)
 			appointmentsForDate.forEach((appt) => console.log(`- Agendamento em ${appt.time} com duração de ${appt.duration} minutos`))
@@ -409,14 +410,14 @@ export async function generateTimeSlots({ slug, serviceId, date }: { slug: strin
 		.map(([time, data]) => ({ time, ...data }))
 }
 
-// Gera um array de profissionais disponíveis na hora selecionada
+// Gera um array de profissionais ativos disponíveis na hora selecionada
 export async function getAvailableEmployees({ slug, serviceId, date, time }: { slug: string; serviceId: string; date: string; time: string }): Promise<{ id: string; name: string }[]> {
 	const toMinutes = (time: string) => {
 		const [h, m] = time.split(':').map(Number)
 		return h * 60 + m
 	}
 
-	const isDateInRange: (dateStr: string, startStr: string, endStr: string) => boolean = (dateStr, startStr, endStr) => {
+	const isDateInRange = (dateStr: string, startStr: string, endStr: string): boolean => {
 		const d = new Date(dateStr)
 		const start = new Date(startStr)
 		const end = new Date(endStr)
@@ -426,51 +427,49 @@ export async function getAvailableEmployees({ slug, serviceId, date, time }: { s
 		return start <= d && d <= end
 	}
 
-	// Buscar a empresa
+	// Buscar a empresa pelo slug
 	const resBusiness = await fetch(`${API_URL}/business?slug=${slug}`)
 	const business = await resBusiness.json()
 	const businessId = business?.[0]?.id
 	if (!businessId) return []
 
-	// Buscar funcionários e agendamentos
-	const [employeesRes, appointmentsRes] = await Promise.all([fetch(`${API_URL}/business_employee?business_id=${businessId}`), fetch(`${API_URL}/business_appointment?business_id=${businessId}`)])
-	const employees: BusinessEmployee[] = await employeesRes.json()
-	const appointments: BusinessEmployeeAppointment[] = await appointmentsRes.json()
+	// Buscar funcionários da empresa e agendamentos do dia
+	const [employeesRes, appointmentsRes] = await Promise.all([fetch(`${API_URL}/employee?business_id=${businessId}`), fetch(`${API_URL}/appointment?business_id=${businessId}`)])
+	const employees: EmployeeType[] = await employeesRes.json()
+	const appointments: AppointmentType[] = await appointmentsRes.json()
 
 	// Converter o horário selecionado para minutos
 	const selectedTimeInMinutes = toMinutes(time)
 
-	// Filtrar os profissionais que prestam o serviço
+	// Filtrar os profissionais ativos que prestam o serviço
 	const professionals = employees
+		.filter((emp) => emp.status === 'active') // <== FILTRAR SOMENTE ATIVOS
 		.map((emp) => {
-			const match = emp.business_services.find((s) => String(s.business_service_id) === String(serviceId))
+			const match = emp.services.find((s) => String(s.service_id) === String(serviceId))
 			if (!match) return null
 			return {
 				...emp,
 				serviceDuration: Number(match.duration),
 			}
 		})
-		.filter(Boolean) as (BusinessEmployee & { serviceDuration: number })[]
+		.filter(Boolean) as (EmployeeType & { serviceDuration: number })[]
 
-	// Lista de profissionais disponíveis
 	const availableProfessionals: { id: string; name: string }[] = []
 
-	// Verificar a disponibilidade de cada profissional
 	for (const pro of professionals) {
-		// Verificar se o profissional está disponível na data
+		// Ignorar se indisponível na data
 		const unavailable = pro.unavailable_dates.find((range) => isDateInRange(date, range.date_start, range.date_end))
-		if (unavailable) continue // Pular este profissional se estiver indisponível na data
+		if (unavailable) continue
 
-		// Converter horários de trabalho para minutos
+		// Horários de trabalho
 		const workStart = toMinutes(pro.work_time.start)
 		const workEnd = toMinutes(pro.work_time.end)
 
-		// Verificar se o horário selecionado está dentro do horário de trabalho
+		// Verificar se o horário está dentro do horário de trabalho
 		if (selectedTimeInMinutes >= workStart && selectedTimeInMinutes < workEnd) {
-			// Verificar se o horário selecionado está disponível
 			const blockedRanges: { start: number; end: number }[] = []
 
-			// Adicionar bloqueios de horário
+			// Adicionar bloqueios manuais
 			for (const bt of pro.blocked_times) {
 				const btStart = toMinutes(bt.time)
 				const btDuration = Number(bt.duration)
@@ -482,10 +481,10 @@ export async function getAvailableEmployees({ slug, serviceId, date, time }: { s
 				}
 			}
 
-			// Adicionar agendamentos
-			const appointmentsForDate = appointments.filter((appt) => appt.business_employee_id === pro.id && appt.date === date && appt.status !== 'canceled')
+			// Agendamentos do profissional para o dia
+			const appointmentsForDate = appointments.filter((appt) => appt.employee_id === pro.id && appt.date === date && appt.status !== 'canceled')
 
-			// Adicionar agendamentos ao bloqueio
+			// Adicionar horários dos agendamentos ao bloqueio
 			for (const appt of appointmentsForDate) {
 				const apptStart = toMinutes(appt.time)
 				const apptDuration = Number(appt.duration)
@@ -497,10 +496,10 @@ export async function getAvailableEmployees({ slug, serviceId, date, time }: { s
 				}
 			}
 
-			// Verificar se o horário selecionado está bloqueado
+			// Verificar se o horário selecionado conflita com algum bloqueio
 			const conflict = blockedRanges.find((b) => !(selectedTimeInMinutes < b.start || selectedTimeInMinutes >= b.end))
 
-			// Se não houver conflito, o profissional está disponível
+			// Se não houver conflito, adicionar como disponível
 			if (!conflict) {
 				availableProfessionals.push({ id: pro.id, name: pro.name })
 			}
@@ -508,4 +507,295 @@ export async function getAvailableEmployees({ slug, serviceId, date, time }: { s
 	}
 
 	return availableProfessionals
+}
+
+// Busca todos os profissionais ativos da empresa pelo slug da empresa
+export async function getAllEmployees(slug: string): Promise<EmployeeType[]> {
+	try {
+		const business = await getBusiness(slug)
+		if (!business?.id) return []
+
+		const res = await fetch(`${API_URL}/employee?business_id=${business.id}&status=active`, {
+			method: 'GET',
+			headers: { 'Content-Type': 'application/json' },
+			cache: 'no-store',
+		})
+		if (!res.ok) throw new Error(`Erro ao buscar profissionais: ${res.status}`)
+
+		const allEmployees: EmployeeType[] = await res.json()
+
+		return allEmployees
+	} catch (error) {
+		console.error('Erro em getAllEmployees:', error)
+		return []
+	}
+}
+
+// PAINEL DO GERENTE DO SALÃO
+
+// Obtém pelo slug da empresa o menor horário de início anterior e o próximo horário do maior horário de fim
+// entre os profissionais ativos da empresa e retorna os slots de tempo com base nesse intervalo.
+export async function getAllTimes(slug: string): Promise<string[]> {
+	const interval = 15 // Intervalo em minutos
+
+	// Gera horários em string formatada alinhados à hora cheia anterior e posterior
+	function generateAllTimes(startTime: string, endTime: string, interval: number): string[] {
+		const padZero = (n: number) => n.toString().padStart(2, '0')
+
+		const [startHour, startMinute] = startTime.split(':').map(Number)
+		const [endHour, endMinute] = endTime.split(':').map(Number)
+
+		let startTotalMinutes = startHour * 60 + startMinute
+		let endTotalMinutes = endHour * 60 + endMinute
+
+		// Arredonda o início para a hora cheia anterior
+		startTotalMinutes = Math.floor(startTotalMinutes / 60) * 60
+
+		// Arredonda o fim para a hora cheia seguinte
+		endTotalMinutes = Math.ceil(endTotalMinutes / 60) * 60
+
+		const times: string[] = []
+
+		for (let current = startTotalMinutes; current <= endTotalMinutes; current += interval) {
+			const hours = Math.floor(current / 60)
+			const minutes = current % 60
+			times.push(`${padZero(hours)}:${padZero(minutes)}`)
+		}
+
+		return times
+	}
+
+	try {
+		const business = await getBusiness(slug)
+		if (!business?.id) return []
+
+		const res = await fetch(`${API_URL}/employee?business_id=${business.id}`, {
+			method: 'GET',
+			headers: { 'Content-Type': 'application/json' },
+			cache: 'no-store',
+		})
+		if (!res.ok) throw new Error('Erro ao buscar profissionais')
+
+		const employees = await res.json()
+
+		if (!Array.isArray(employees) || employees.length === 0) {
+			throw new Error('Nenhum profissional encontrado.')
+		}
+
+		// Filtro para considerar apenas profissionais com status 'active'
+		const activeEmployees = employees.filter((emp: { status: string }) => emp.status === 'active')
+
+		if (activeEmployees.length === 0) {
+			console.warn('Nenhum profissional ativo encontrado.')
+			return []
+		}
+
+		let minStartMinutes = Infinity
+		let maxEndMinutes = -Infinity
+
+		for (const emp of activeEmployees) {
+			const start = emp.work_time?.start
+			const end = emp.work_time?.end
+
+			if (!start || !end) continue
+
+			const [startH, startM] = start.split(':').map(Number)
+			const [endH, endM] = end.split(':').map(Number)
+
+			const totalStart = startH * 60 + startM
+			const totalEnd = endH * 60 + endM
+
+			if (totalStart < minStartMinutes) minStartMinutes = totalStart
+			if (totalEnd > maxEndMinutes) maxEndMinutes = totalEnd
+		}
+
+		if (minStartMinutes === Infinity || maxEndMinutes === -Infinity) {
+			console.warn('Nenhum horário de trabalho válido encontrado entre profissionais ativos.')
+			return []
+		}
+
+		// Converte minutos totais para string HH:mm
+		const padZero = (n: number) => n.toString().padStart(2, '0')
+		const startTime = `${padZero(Math.floor(minStartMinutes / 60))}:${padZero(minStartMinutes % 60)}`
+		const endTime = `${padZero(Math.floor(maxEndMinutes / 60))}:${padZero(maxEndMinutes % 60)}`
+
+		// Gera e retorna os slots de tempo
+		return generateAllTimes(startTime, endTime, interval)
+	} catch (error) {
+		console.error('Erro em getAllTimes:', error)
+		return []
+	}
+}
+
+// Gera um array de profissionais com o tempo para renderizar os componentes de evento, considerando:
+// - Horário de trabalho (work_time)
+// - Datas indisponíveis (unavailable_dates)
+// - Horários bloqueados (blocked_times)
+// - Agendamentos existentes (appointments), exceto os com status "canceled"
+export async function getAllEventsEmployee(slug: string, employee_id: string, date: string): Promise<AllEventsEmployeeType> {
+	// Converte string HH:mm em minutos
+	function parseTime(time: string): number {
+		const [h, m] = time.split(':').map(Number)
+		return h * 60 + m
+	}
+
+	// Converte minutos totais para string HH:mm
+	function formatMinutes(mins: number): string {
+		const h = Math.floor(mins / 60)
+			.toString()
+			.padStart(2, '0')
+		const m = (mins % 60).toString().padStart(2, '0')
+		return `${h}:${m}`
+	}
+
+	// Busca os dados do cliente pelo ID
+	async function getCustomerById(id: string): Promise<string> {
+		if (customerCache.has(id)) return customerCache.get(id)!
+
+		const res = await fetch(`${API_URL}/customer?id=${id}`, {
+			method: 'GET',
+			headers: { 'Content-Type': 'application/json' },
+			cache: 'no-store',
+		})
+
+		if (!res.ok) {
+			console.warn(`Erro ao buscar cliente com id ${id}:`, res.status)
+			return 'Cliente'
+		}
+
+		const data = await res.json()
+		const name = data[0]?.name ?? 'Cliente'
+		customerCache.set(id, name)
+		return name
+	}
+
+	// Busca os dados do serviço pelo ID
+	async function getServiceById(service_id: string): Promise<ServiceType | null> {
+		const res = await fetch(`${API_URL}/service?id=${service_id}`, {
+			method: 'GET',
+			headers: { 'Content-Type': 'application/json' },
+			cache: 'no-store',
+		})
+		const data = await res.json()
+		return data[0] ?? null
+	}
+
+	const customerCache = new Map<string, string>() // cache local para evitar requisições duplicadas
+
+	const business = await getBusiness(slug)
+	if (!business?.id)
+		return {
+			employee_id: employee_id,
+			events: [],
+		}
+
+	const res = await fetch(`${API_URL}/employee?id=${employee_id}`, {
+		method: 'GET',
+		headers: { 'Content-Type': 'application/json' },
+		cache: 'no-store',
+	})
+
+	const [employee]: EmployeeType[] = await res.json()
+	if (!employee)
+		return {
+			employee_id: employee_id,
+			events: [],
+		}
+
+	const appointmentsRes = await fetch(`${API_URL}/appointment?business_id=${business.id}&employee_id=${employee_id}&date=${date}&status_ne=canceled`, {
+		method: 'GET',
+		headers: { 'Content-Type': 'application/json' },
+		cache: 'no-store',
+	})
+
+	const appointments: AppointmentType[] = await appointmentsRes.json()
+
+	const events: EventEmployeeType[] = []
+	const slotMinutes = 15
+
+	// Obtém o horário (inicio e fim) dos eventos do profissional através da função getAllTimes()
+	const timeSlots = await getAllTimes(slug)
+	if (timeSlots.length === 0)
+		return {
+			employee_id: employee_id,
+			events: [],
+		}
+
+	const dayStart = parseTime(timeSlots[0])
+	const dayEnd = parseTime(timeSlots[timeSlots.length - 1]) + slotMinutes // adiciona último slot
+
+	// Obtém o horário de trabalho de inicio e fim do profissional
+	const workStart = parseTime(employee.work_time.start)
+	const workEnd = parseTime(employee.work_time.end)
+
+	const isUnavailable = employee.unavailable_dates.some((unavailable) => {
+		return date >= unavailable.date_start && date <= unavailable.date_end
+	})
+
+	// Rastreia até que ponto os slots devem ser marcados como empty após um evento com duração.
+	// Ao processar cada intervalo de tempo, verifica se o horário atual está dentro do intervalo
+	// de skipUntil. Se estiver, adicionamos um evento do tipo empty.
+	// Quando encontra um blocked_time ou appointment_time, define skipUntil para o horário final
+	// do evento, garantindo que os slots subsequentes sejam marcados corretamente como empty.
+
+	let skipUntil = -1
+
+	for (let time = dayStart; time < dayEnd; time += slotMinutes) {
+		const timeStr = formatMinutes(time)
+
+		// Verifica se o horário atual deve ser marcado como empty
+		if (time < skipUntil) {
+			events.push({ time: timeStr, type: 'empty' })
+			continue
+		}
+
+		// Verifica se é data indisponível
+		if (isUnavailable) {
+			events.push({ time: timeStr, type: 'unavailable_date' })
+			continue
+		}
+
+		// Verifica se é horário de trabalho
+		if (time < workStart || time >= workEnd) {
+			events.push({ time: timeStr, type: 'not_work_time' })
+			continue
+		}
+
+		// Verifica se é bloqueio
+		const block = employee.blocked_times.find((b) => b.time === timeStr)
+		if (block) {
+			const duration = parseInt(block.duration)
+			events.push({
+				time: timeStr,
+				type: 'blocked_time',
+				duration,
+				description: block.description,
+			})
+			skipUntil = time + duration
+			continue
+		}
+
+		// Verifica se tem agendamento
+		const appointment = appointments.find((a) => a.time === timeStr)
+		if (appointment) {
+			const [customerName, service] = await Promise.all([getCustomerById(appointment.customer_id), getServiceById(appointment.service_id)])
+
+			events.push({
+				time: timeStr,
+				type: 'appointment_time',
+				duration: appointment.duration,
+				name: customerName,
+				service: service?.name ?? 'Serviço',
+			})
+			skipUntil = time + appointment.duration
+			continue
+		}
+
+		events.push({ time: timeStr, type: 'free_time' })
+	}
+
+	return {
+		employee_id,
+		events,
+	}
 }
