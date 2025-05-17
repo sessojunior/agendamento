@@ -79,3 +79,5 @@ appointment                     → Agendamentos com todas as informações rele
 ### Melhorias futuras:
 
 1. Colocar um 'extraWorkTime' que seria um tempo extra de trabalho em determinados dias. Deveria ser adaptado isso no JSON. Serve para suprir a necessidade de quando o profissional puder trabalhar em horário diferente do que ele costuma trabalhar e está funcionando.
+
+2. Horário de funcionamento do profissional diferente para cada empresa separadamente para cada dia de semana e feriados.
